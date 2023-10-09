@@ -1,0 +1,25 @@
+---
+title: "explorer histograms"
+author: "Randy and Hannah"
+format: html
+---
+
+```{r}
+# load packages
+
+library(tidyverse)
+library(ggvis)
+```
+
+```{r}
+# quick ggvis demo
+
+#| warning: false
+#| error: false
+
+faithful %>% ggvis(~eruptions) %>% 
+    layer_histograms(fill := "lightblue", 
+        width = input_slider(0.1, 2, value = .1, 
+                             step = .1, label = "width"))
+```
+

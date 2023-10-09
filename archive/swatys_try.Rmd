@@ -1,0 +1,98 @@
+---
+title: "Social Vulnerability Mapping"
+author: "Randy"
+date: '2022-06-23'
+output: html_document
+---
+
+# Goals
+
+* Make proof of concept maps combining the Wildfire Risk to Important Watersheds and SVI metrics for North Carolina
+* Learn to wrangle data, and make the maps
+
+
+* IMPORTANTE!  we need to "normalize" that is use rates if that is not already the case in the SVI data!  
+
+
+## Install and load libraries
+
+```{r setup, message= FALSE, warning= FALSE, include= FALSE}
+#install.packages("tidyverse")
+#install.packages("tigris")
+#install.packages("usmap")
+library(tidyverse) # data reading and wrangling
+library(tigris) # for counties data
+library(scales) # for commas (and other formatting) with charts
+library(usmap)
+library(sf)
+```
+
+
+## Read in then join datasets for SVI exploration
+
+
+```{r data, message=FALSE, warning=FALSE}
+# SVI master dataset
+svi_data <- read_csv("data/SVI2018_US_COUNTY.csv")
+
+wfp_data <- read_csv("data/countyMeanWFP.csv")
+
+# counties data (has geometries).  Need to remove AK, HI, all STATEFP >57
+us_cntys <- counties() %>%
+  subset(STATEFP < 57) %>% #insular areas
+  subset(STATEFP != "02")%>%  #Alaska
+  subset(STATEFP != "15" )   #Hawaii
+```
+
+## Join svi to counties.  Note-I did not create a new dataframe, and only joined SVI metrics of interest.  You can easily change the selected for columns
+```{r}
+
+# do the join of svi to counties
+cntys_svi_metrics <- left_join(us_cntys,
+                              svi_data %>% dplyr::select(FIPS, E_POV, E_MINRTY, E_DISABL),
+                               by = c("GEOID" = "FIPS"))
+
+# remove unneeded columns
+
+cntys_svi_metrics <- cntys_svi_metrics %>%
+                      select(-c(7:15))
+
+cntys_svi_wfp_metrics <- left_join(cntys_svi_metrics,
+                                   wfp_data %>% dplyr::select(mean, GEOID),
+                                   by = "GEOID"
+                                   
+)
+
+
+# save as shapefile for mapping in QGIS
+
+st_as_sf(cntys_svi_wfp_metrics)
+
+st_write(cntys_svi_wfp_metrics, 
+         "outputs/cntys_svi_wfp_metrics.shp")
+
+
+```
+
+
+## density charts
+
+I only did one...you can do the rest.  
+
+```{r}
+e_pov_hist <-
+  cntys_svi_metrics %>%
+  ggplot(aes(x = E_POV)) +
+  geom_histogram(fill = 'skyblue', color = 'grey23' ) +
+  labs(
+    title = "Density chart for E_POV metric",
+    x = "You need to figure out the units for this :)"  
+    )  +
+  scale_x_continuous(labels = comma) +
+  scale_y_continuous(labels = comma)
+
+e_pov_hist
+```
+
+
+

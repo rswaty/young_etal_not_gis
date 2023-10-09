@@ -1,0 +1,30 @@
+---
+title: "Social Vulnerability Mapping"
+author: "Hannah"
+date: '2022-06-23'
+output: html_document
+---
+```{r setup, message= FALSE, warning= FALSE, include= FALSE}
+#install.packages("tidyverse")
+#install.packages("tigris")
+#install.packages("usmap")
+library(tidyverse)
+library(tigris)
+library(usmap)
+```
+
+```{r data}
+svi_us <- read_csv("SVI2018_US_COUNTY.csv")
+```
+
+```{r}
+data <- svi_us %>% select(FIPS, E_POV)
+```
+
+```{r}
+us <- counties()
+```
+
+```{r}
+map <- left_join(us, data, by = c("GEOID" = "FIPS"))
+```

@@ -1,0 +1,95 @@
+---
+title: "EDA with datasets"
+author: "Randy"
+format: html
+---
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+## load packages
+#install.packages("dlookr")
+
+
+library(tidyverse)
+
+
+## read in datasets
+pov <- read_csv("data/cnty_pov.csv")
+wfhp <- read_csv("data/cnty_wfhp.csv")
+wfp_f2f <- read.csv("data/cnty_wfp.csv")
+
+
+```
+
+
+## Percent Poverty
+
+
+```{r pov, message=FALSE, warning=FALSE, echo=FALSE}
+
+c(summary(pov$percent_pov), stdev=sd(pov$percent_pov)) 
+
+
+ggplot(data = pov) +
+  geom_histogram(mapping = aes(x = percent_pov), 
+                 binwidth = 5,
+                 fill = "lightblue4",
+                 color = "grey") +
+  theme_bw() +
+  labs(
+    title = "Distribution of % below Poverty data for US Counties",
+    subtitle = "Bin width = 5",
+    x = "Percent below povery",
+    y = "Number of Counties"
+  )
+
+```
+
+
+## Wildfire Hazard Potential
+
+
+```{r wfhp, message=FALSE, warning=FALSE, echo=FALSE}
+
+c(summary(wfhp$weighted_wfhp), stdev=sd(wfhp$weighted_wfhp)) 
+
+
+ggplot(data = wfhp) +
+  geom_histogram(mapping = aes(x = weighted_wfhp), 
+                 binwidth = 0.5,
+                 fill = "goldenrod2",
+                 color = "grey") +
+  theme_bw() +
+  labs(
+    title = "Distribution of % Wildfire Hazard Potential (WFHP) data for US Counties",
+    subtitle = "Bin width = 0.5, Classified Categories",
+    x = "Weighted WFHP",
+    y = "Number of Counties"
+  )
+
+```
+
+
+## Wildfire Potential to Surface Water
+
+
+```{r wfp, message=FALSE, warning=FALSE, echo=FALSE}
+
+c(summary(wfp_f2f$weighted_wfp), stdev=sd(wfp_f2f$weighted_wfp)) 
+
+
+ggplot(data = wfp_f2f) +
+  geom_histogram(mapping = aes(x = weighted_wfp), binwidth = 5,
+                 fill = "lightblue",
+                 color = "grey") +
+  theme_bw() +
+  labs(
+    title = "Distribution of % Wildfire Potential to surface water data for US Counties",
+    subtitle = "Bin width = 5",
+    x = "Weighted WFHP",
+    y = "Number of Counties"
+  )
+
+
+```
+

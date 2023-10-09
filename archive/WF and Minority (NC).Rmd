@@ -1,0 +1,99 @@
+---
+title: "WF and Minority (NC)"
+author: "Hannah"
+date: '2022-06-04'
+output: html_document
+---
+```{r setup, message= FALSE, warning= FALSE, include= FALSE}
+#install.packages("tidyverse")
+#install.packages("viridis")
+#install.packages("readxl")
+#install.packages("stringr")
+library(tidyverse)
+library(viridis)
+library(readxl)
+library(stringr)
+```
+
+```{r data}
+ncCtysWFrisk <- read_csv("ncCtysWFrisk.csv")
+svi_nc <- read_csv("svi_nc.csv")
+```
+
+```{r}
+data <- left_join(ncCtysWFrisk, svi_nc, by="FIPS") %>%
+  select(FIPS, MEAN, E_MINRTY)
+```
+
+```{r}
+data2<-data %>% gather(var,value,-FIPS)
+```
+
+```{r}
+data2<-data2 %>% mutate( type=substr(var,1,3))
+```
+
+```{r}
+data3 <- data2 %>% select(FIPS,type,value) %>% spread(type,value)
+```
+
+```{r}
+data3<-mutate(data3, FIPS=str_pad(FIPS, 5, pad = "0"))
+```
+
+```{r}
+data3 <- data3 %>% mutate(svi=E_M, WF=MEA, ratio=(WF/svi))
+```
+
+```{r}
+library(ggthemes)
+library(ggalt)
+library(maps)
+library(rgeos)
+library(maptools)
+library(grid)
+library(tidycensus)
+library(tigris)
+```
+
+```{r}
+nc_counties <- counties(state = "NC")
+```
+
+```{r}
+nc_counties <- left_join(nc_counties, data3, by = c("GEOID" = "FIPS"))
+```
+
+```{r}
+install.packages("biscale")
+install.packages("cowplot")
+library(biscale)
+library(cowplot)
+library(sf)
+```
+
+```{r}
+data3.0 <- bi_class(nc_counties, x = WF, y = svi, style = "jenks", dim = 3)
+```
+
+```{r}
+map <- ggplot() +
+  geom_sf(data = data3.0, mapping = aes(fill = bi_class), color = "darkgrey", size = 0.1, show.legend = FALSE) +
+  bi_scale_fill(pal = "GrPink", dim = 3) +
+  labs(
+    title = "Wildfire Risk on Important Watersheds and Minority Presence",
+    caption = "Wildfire risk to important watersheds data from Forest to Faucets (https://www.fs.fed.us/ecosystemservices/FS_Efforts/forests2faucets.shtml);\nLevel of minority presence from the Social Vulnerability Index (https://www.atsdr.cdc.gov/placeandhealth/svi/index.html)."
+  ) +
+  bi_theme(base_size = 10)
+
+legend <- bi_legend(pal = "GrPink",
+                    dim = 3,
+                    xlab = "Wildfire Risk on Watersheds",
+                    ylab = "Minority Presence",
+                    size = 4)
+
+finalPlot <- ggdraw() +
+  draw_plot(map, 0, 0, 1, 1) +
+  draw_plot(legend, 0.2, .25, 0.2, 0.2)
+finalPlot
+```
